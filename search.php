@@ -11,38 +11,105 @@ require('DBConnection.php');
 
 	Version history:
 	0.1	17/08/11	Janith		Wrote the search thing
+	0.2	03/09/11	Janith		Major expansion - added advanced search
 
 ******************************************************************************************/
 
 $DBConnection = new DBConnection();
 
-if(isset($_GET['q']))		// mode switch
+if(isset($_GET['q']))		// make sure we have a search query
 {
-	$string = '%'.str_replace(' ', '%', $_GET['q']).'%';
+	$string = $_GET['q'];
 
-	$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string));
+	$adv = false;	// advanced search off by default
+
+	// if the search string is enclosed in double quotes, search for perfect matches to that *word*
+	// if not, search for occurences of that string within other words and stuff.
+
+	if(preg_match('/^".*"$/', $string))
+	{
+		$string = '%'.str_replace('"', ' ', $string).'%';
+	}
+	else
+	{
+		$string = '%'.str_replace(' ', '%', $string).'%';
+	}
+
+	// if any of these are set, jump into advanced search. otherwise set the parameter to basically something 
+	// that includes all, to avoid ugh running queries without parameters? :)
+
+	if(isset($_GET['l']) && $_GET['l'] != '') { $lang = $_GET['l']; $adv = true; } // get language
+	else { $lang = '%'; }
+
+	if(isset($_GET['t']) && $_GET['t'] == 1) { $time = true; $adv = true; } // get sort by time
+	else { $time = false; }
+	
+	if(isset($_GET['s']) && $_GET['s'] != '') 	// get start time
+	{
+		$starta = explode("%2F",  $_GET['s']);
+
+		if(count($starta) == 3)
+		{
+			$start = mktime (0, 0, 0, $starta[1], $starta[0], $starta[2]);
+		}
+		else
+		{
+			$start = 0;
+		}
+
+		$adv = true; 
+	} 
+	else 
+	{
+		$start = 0; 
+	}
+
+	if(isset($_GET['e']) && $_GET['e'] != '') 	// get end time
+	{
+		$enda = explode("%2F",  $_GET['e']);
+
+		if(count($enda) == 3)
+		{
+			$end = mktime (0, 0, 0, $enda[1], $enda[0]+1, $enda[2]);	// +1 is to add one day to the end date, to include the end date
+		}
+		else
+		{
+			$end = time();
+		}
+
+		$adv = true; 
+	} 
+	else 
+	{
+		$end = time(); 
+	}
+
+	if($adv)
+	{
+		if($time)
+		{
+			$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) AND p.language LIKE :lang AND p.postTimestamp >= :start AND p.postTimestamp <= :end ORDER BY postTimestamp DESC LIMIT 25", array(':string'=>$string, ':lang'=>$lang, ':start'=>$start, ':end'=>$end));
+		}
+		else
+		{
+
+			$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) AND p.language LIKE :lang AND p.postTimestamp >= :start AND p.postTimestamp <= :end ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string, ':lang'=>$lang, ':start'=>$start, ':end'=>$end));
+		}
+	}
+	else
+	{
+		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string));
+
+	}
 
 	if($resultset)
 	{
 		head('Search results');
-		content($resultset);
+		content($resultset, $_GET['q']);
 		tail();
-	}
-	else
-	{
-		head('Search results');
-echo<<<OUT
-		<div class="item">
-			<h2>No Results Found</h2>
-			<p>We're sorry, but your search string didn't match any entries in our database. Please try again.</p>
-		</div>
-
-OUT;
-		tail();
-	}
-		
+	}	
 }
-else
+else			// redirect to home page if no query string
 { 
 	header('location: ./index.php');
 }
@@ -78,8 +145,44 @@ echo<<<OUT
 		</div>
 	</div>
 	<div class="main">
+	<div class="sidebar">
+	<h3>Advanced Search</h3>
+	<form method="get" action="search.php">
+	<input type="text" name="q" tabindex=2 value="${_GET['q']}"/><br/><br/>
+
+	<label>Start Date:</label><br/>
+	<input type="text" name="s" tabindex=3 value=""/><br/>
+	<em>(in D/M/Y format. Leave blank for all dates)</em></br><br/>
+	
+
+	<label>End Date:</label><br/>
+	<input type="text" name="e" tabindex=4 value=""/><br/>
+	<em>(in D/M/Y format. Leave blank for all dates)</em></br><br/>
+
+	<label>Language:</label>
+	<select name="l" tabindex=5>
+		<option value="">All</option>
+		<option value="en">English</option>
+		<option value="si">Sinhala</option>
+		<option value="ta">Tamil</option>
+	</select>
+	<br/><br/>
+
+	<input type="radio" name="t" value="1" /> Order by timestamp<br />
+	<input type="radio" name="t" value="0" /> Order by popularity<br/><br/>
+
+	<input class="button" type="submit" value="Advanced search" tabindex=6 />
+	<input class="button" type="reset" value="Reset" tabindex=7 />
+	</form>
+
+	<br/><br/>
+	<h3>Note:</h3>
+	To search for a particular word (and not a phrase), use double quotes to enclose the search string.<br/><br/>
+	E.g. "india" instead of india.
+
+	</div>
 	<div class="content">
-	<div class="colhead">
+	<div>
 	<h2>Search results:</h2>
 	</div>
 
@@ -87,18 +190,19 @@ OUT;
 
 }
 
-function content($resultset)
+function content($resultset, $searchstring)
 {
-	/*
-	Here, we'll loop through all of the items in the feed, and $item represents the current item in the loop.
-	*/
+	// Here, we'll loop through all of the items in the feed, and $item represents the current item in the loop.
+
+	$count = 0;		// count of number of elements
+
 	while($array = $resultset->fetch())
 	{
 
 		$link = "go.php?url=".$array[0];
 		$title = $array[1];
 		$content = $array[2];
-		$timestamp = date('j F Y | g:i a', $array[3]);
+		$timestamp = date('j F Y', $array[3]);
 		$buzz = (int)($array[4] * 100);
 		$blogurl = $array[5];
 
@@ -112,16 +216,33 @@ function content($resultset)
 			$buzz = 0;
 		}
 
+		// highlighing searchstring in results
+
+		$searchstring = str_replace('"', '', $searchstring);
+		$content = str_ireplace($searchstring, '<strong><u>'.$searchstring.'</u></strong>', $content);
+
 echo<<<OUT
 		<div class="item">
 			<h2><a href="$link">$title</a></h2>
 			<p><small><a href="$blogurl">$blogurl</a></small></p>
 			<p>$content</p>
-			<p><small>Posted on $timestamp | Buzz percentage: $buzz%</small></p>
+			<p><small>Posted on $timestamp | Spice: $buzz%</small></p>
 		</div>
 
 OUT;
- 
+
+		$count++;
+	}
+
+	if($count == 0)
+	{
+		echo<<<OUT
+		<div class="item">
+			<h2>No Results Found</h2>
+			<p>We're sorry, but your search string didn't match any entries in our database. Please try again.</p>
+		</div>
+
+OUT;
 	}
 }
 
