@@ -19,16 +19,16 @@ $DBConnection = new DBConnection();
 
 if(isset($_GET['q']))		// make sure we have a search query
 {
-	$string = $_GET['q'];
+	$string = html_entity_decode($_GET['q']);
 
 	$adv = false;	// advanced search off by default
 
 	// if the search string is enclosed in double quotes, search for perfect matches to that *word*
 	// if not, search for occurences of that string within other words and stuff.
 
-	if(preg_match('/^".*"$/', $string))
+	if(preg_match('/^_.*_$/', $string))
 	{
-		$string = '%'.str_replace('"', ' ', $string).'%';
+		$string = '%'.str_ireplace("_", ' ', $string).'%';
 	}
 	else
 	{
@@ -177,8 +177,8 @@ echo<<<OUT
 
 	<br/><br/>
 	<h3>Note:</h3>
-	To search for a particular word (and not a phrase), use double quotes to enclose the search string.<br/><br/>
-	E.g. "india" instead of india.
+	To search for a particular word (and not a phrase), use underscores to enclose the search string.<br/><br/>
+	E.g. _india_ instead of india.
 
 	</div>
 	<div class="content">
