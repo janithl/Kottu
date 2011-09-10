@@ -7,21 +7,6 @@ require('../DBConnection.php');
 /******************************************************************************************
 Kottu 7.8 
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-
 Feedget - gets RSS feeds and puts posts into our database
 
 Version history:
@@ -31,8 +16,12 @@ Version history:
 0.4	20/08/11	Janith		Added debugging/reporting feature
 0.5	22/08/11	Janith		Fixed a major issue in that it reads the same blogs
 					over and over - added this access_ts thing to blogs
+0.6	06/09/11	Janith		Added tags, messed with the lang filter, stopped stripping <img>
 
 ******************************************************************************************/
+
+// array of valid tags - edit here
+$valid = array('art','technology','travel','nature','news','personal','entertainment','business','politics','sports','poetry','photos','faith','other');
 
 $DBConnection = new DBConnection();
 
@@ -44,16 +33,12 @@ if($resultset)
 {
 	// for debugging purposes //
 
-	$ts_s = time();
-	$debug = "[feedget ]\tbegan run at ".date('j F Y h:i:s A',$ts_s)."\n";
-
+	$debug = "[feedget ]\tbegan run at ".date('j F Y h:i:s A', time())."\n"; 
 	$counter_all = 0;
 	$counter_ins = 0;
 
 	while($array = $resultset->fetch())
 	{
-		$DBConnection->query("UPDATE blogs SET access_ts = :time WHERE bid = :bid", array(':time'=>$ts_s, ':bid'=>$array[0]));
-
 		// thank god for simplepie
 
 		$feed = new SimplePie();
@@ -62,20 +47,17 @@ if($resultset)
 		$feed->init();
 		$feed->handle_content_type();
 
-		$debug .= "[feedget ]\thit feed at ${array[1]}\n";
-
 		foreach ($feed->get_items() as $item)
 		{
 			$blogID = $array[0];
 			$link = $item->get_permalink();
 			$title = $item->get_title();
 
-			if(strlen($title) < 2)
-			{ $title = "Untitled Post"; }			
+			if(strlen($title) < 2) { $title = "Untitled Post"; }			
 
-			$post_cont = strip_tags($item->get_description());
+			$post_cont = strip_tags($item->get_description(), '<img>');	// include img tags in desc, for photoblogs later
 
-			if(strlen($post_cont) > 380)	// summary generator
+			if(strlen($post_cont) > 400)	// summary generator
 			{
 				$paragraph = explode(' ', $post_cont);
 				$paragraph = array_slice($paragraph, 0, 60);
@@ -86,20 +68,35 @@ if($resultset)
 			$post_ts = strtotime($item->get_date());
 			$server_ts = time();
 
+			// tags!
+
+			$tags = '';
+
+			foreach ($item->get_categories() as $category)
+			{
+				$t = strtolower($category->get_label());
+
+				if($t !== "" && in_array($t, $valid))
+				{
+					$tags .= $t . ','; echo "<strong>" . $t . "</strong><br/>\n";	
+				}
+				echo $t . "<br/>\n";
+			}
+
 			// old post oldification
 
-			if($server_ts - $post_ts > (24 * 60 * 60))
+			if($server_ts > $post_ts)
 			{
 				$server_ts = $post_ts;
 			}
 
 			// below : badly implemented language filter
 
-			if(preg_match('/[අ-෴]{3,5}/', $post_cont))
+			if(preg_match('/[\x{0D80}-\x{0DFF}]{3,5}/u', $post_cont))
 			{
 				$lang = 'si';
 			}
-			else if(preg_match('/[அ|க|ச|ப|ய|ர|ல]{3,5}/', $post_cont))
+			else if(preg_match('/[\x{0B80}-\x{0BFF}]{3,5}/u', $post_cont))
 			{
 				$lang = 'ta';
 			}
@@ -110,8 +107,8 @@ if($resultset)
 
 			$counter_all++;
 
-			$resset = $DBConnection->query("INSERT INTO posts(postID, blogID, link, title, postContent, serverTimestamp, postTimestamp, language) VALUES (NULL, :bid, :link, :title, :content, :serv, :post, :lang)", 
-				array(':bid'=>$blogID, ':link'=>$link, ':title'=>$title, ':content'=>$post_cont, ':serv'=>$server_ts, ':post'=>$post_ts, ':lang'=>$lang));
+			$resset = $DBConnection->query("INSERT INTO posts(postID, blogID, link, title, postContent, serverTimestamp, postTimestamp, language, tags) VALUES (NULL, :bid, :link, :title, :content, :serv, :post, :lang, :tags)", 
+				array(':bid'=>$blogID, ':link'=>$link, ':title'=>$title, ':content'=>$post_cont, ':serv'=>$server_ts, ':post'=>$post_ts, ':lang'=>$lang, ':tags'=>$tags));
 
 			if($resset)
 			{
@@ -120,13 +117,14 @@ if($resultset)
 			}
 		}
 
+		$ts_s = time();
+		$DBConnection->query("UPDATE blogs SET access_ts = :time WHERE bid = :bid", array(':time'=>$ts_s, ':bid'=>$array[0]));
+
 		unset($feed);
 	}
 
 	$debug .= "[feedget ]\tended run at".date('j F Y h:i:s A', time()).". $counter_all post(s) were hit and $counter_ins post(s) inserted\n\n";
 }
-
-echo "<pre>".$debug."</pre>";
 
 $des = "./stats.html";		// reporting
 $file = fopen($des, 'a');

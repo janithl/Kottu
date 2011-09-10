@@ -1,24 +1,10 @@
 <?php
 
 require('DBConnection.php');
+include('./utils/simple_html_dom.php');
 
 /******************************************************************************************
 	Kottu 7.8 
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU Affero General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Affero General Public License for more details.
-
-	You should have received a copy of the GNU Affero General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 
 	index - just a random interface for now
 
@@ -31,6 +17,7 @@ require('DBConnection.php');
 	0.5	24/08/11	Janith		Adding pagination for results
 	0.6	28/08/11	Indi		Sexed up the sidebar (Flickr, Twitter), copy
 	0.7	31/08/11	Janith		Changed the social share widgets under posts
+	0.8	08/09/11	Janith		Tiny interface changes / added thumbnails :)
 
 ******************************************************************************************/
 
@@ -98,7 +85,7 @@ function output($lang, $time, $pagination)
 <!-- End of Flickr Badge -->
 
 	<h3>About</h3>
-	<p>Kottu aggregates over 1,000 Sri Lankan blogs (<a href='http://kottu.org/blogroll/'>Blogroll</a>).</p>
+	<p>Kottu aggregates over 1,000 Sri Lankan blogs (<a href='http://kottu.org/p/blogroll.php'>Blogroll</a>).</p>
 <p><a href="./p/about.php">About/Join</a></p>
 	<br/>
 	<h3>Hot Hot Kottu</h3>
@@ -207,10 +194,10 @@ function content($resultset)
 	while($array = $resultset->fetch())
 	{
 
-		$link = "go.php?url=".$array[0];
+		$link = $array[0];
 		$title = $array[1];
-		$content = $array[2];
-		$timestamp = date('j F Y', $array[3]);
+		$content = strip_tags($array[2]);
+		$timestamp = $array[3];
 		$buzz = (int)($array[4] * 100);
 		$blogurl = $array[5];
 		$blogname = $array[6];
@@ -228,22 +215,61 @@ function content($resultset)
 			$buzz = 0;
 		}
 
-		if($buzz <= 1)	{ $style = 'buzz1'; }
-		else if($buzz <= 10)	{ $style = 'buzz2'; }
-		else if($buzz <= 30)	{ $style = 'buzz3'; }
-		else if($buzz <= 70)	{ $style = 'buzz4'; }
-		else { $style = 'buzz5'; }
-		
+		if($buzz <= 1)	{ $style = '<div id="buzz1"class="buzz"><a>1 chili</a></div>'; }
+		else if($buzz <= 15)	{ $style = '<div id="buzz2"class="buzz"><a>2 chilis</a></div>'; }
+		else if($buzz <= 35)	{ $style = '<div id="buzz3"class="buzz"><a>3 chilis</a></div>'; }
+		else if($buzz <= 55)	{ $style = '<div id="buzz4"class="buzz"><a>4 chilis</a></div>'; }
+		else { $style = '<div id="buzz5"class="buzz"><a>5 chilis</a></div>'; }
+
+		// timestamp made human readable
+
+		$now = time();
+
+		if(($now - $timestamp) < (60 * 60))
+		{
+			$timestamp = (int) (($now - $timestamp) / 60);
+			if($timestamp == 1) { $timestamp .= ' minute ago'; }
+			else { $timestamp .= ' minutes ago'; }
+		}
+		else if(($now - $timestamp) < (24 * 60 * 60))
+		{
+			$timestamp = (int) (($now - $timestamp) / (60 * 60));
+			if($timestamp == 1) { $timestamp .= ' hour ago'; }
+			else { $timestamp .= ' hours ago'; }
+		}
+		else if(($now - $timestamp) < (48 * 60 * 60))
+		{
+			$timestamp = 'Yesterday';
+		}
+		else
+		{
+			$timestamp = 'on ' . date('j F Y', $timestamp);
+		}
+
+		// post thumbnails
+
+		$html = str_get_html($array[2]);
+		$img = '';
+
+		foreach($html->find('img') as $element)
+		{
+			if(preg_match('/(\.jpg|\.png)/i', $element))
+			{
+				$content = '<div class="thumb"><img height="80px" src="' . $element->src . '"/></div>' . "<p>$content</p>";
+			}
+		}
 
 echo<<<OUT
 		<div class="item">
-			<h2><a href="$link">$title</a></h2>
+			<h2><a href="go.php?url=$link">$title</a></h2>
 			<p><small><a href="$blogurl">$blogname</a></small></p>
-			<p>$content</p>
-			<p><div id=timestamp>Posted on $timestamp</div><div class=buzz id=$style>Spice: <a>$buzz%</a></div><div id=twitter><a herf="#" onClick="window.open('https://twitter.com/intent/tweet?source=tweetbutton&url=${array[0]}', 'Share on Twitter', 'toolbar=no, scrollbars=yes, width=500, height=400');">Tweets:</a> $tw</div><div id=fb><a href="#"  onClick="window.open('http://www.facebook.com/share.php?u=${array[0]}&t=$title', 'Share on Facebook', 'toolbar=no, scrollbars=yes, width=500, height=400');">Shares:</a> $fb</div></p>
+			$content
+			<div id=footer><div id=timestamp>Posted $timestamp</div><div id=twitter><a herf="#" onClick="window.open('https://twitter.com/intent/tweet?source=tweetbutton&url=$link', 'Share on Twitter', 'toolbar=no, scrollbars=yes, width=500, height=400');">$tw tweets</a></div><div id=fb><a href="#"  onClick="window.open('http://www.facebook.com/share.php?u=$link&t=$title', 'Share on Facebook', 'toolbar=no, scrollbars=yes, width=500, height=400');">$fb shares</a></div>$style</div>
 		</div>
 
 OUT;
  
 	}
 }
+
+?>
