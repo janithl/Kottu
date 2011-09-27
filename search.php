@@ -7,21 +7,6 @@ require('DBConnection.php');
 /******************************************************************************************
 	Kottu 7.8 
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU Affero General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Affero General Public License for more details.
-
-	You should have received a copy of the GNU Affero General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-
 	search.php
 
 	Version history:
@@ -146,35 +131,34 @@ echo<<<OUT
 </head>
 <body>
 	<div class="header">
-		<a href="index.php"><img src="images/logo.png"/></a>
-		<div id="menu">
-			<ul><li></li></ul>
-
+	<div id="menu">
+		<a href="./"><span id="logo"/></a>
+		<div id="lan">
 		</div>
+
 	
 		<div id="search">
-			<form method="get" action="search.php">
+			<form method="get" action="../search.php">
 				<input type="text" name="q" id="search-text"/>
 			</form>
 
 		</div>
 	</div>
+	</div>
 	<div class="main">
 	<div class="sidebar">
-	<h3>Advanced Search</h3>
+	<h3>Note:</h3>
+	To search for a particular word (and not a phrase), use underscores to enclose the search string.<br/><br/>
+	E.g. _india_ instead of india.
+
+	</div>
+	<div class="content">
+	<br/>
+	<span id="asnotify">Want more options? <a href="#" onClick="document.getElementById('advancedsearch').style.display = 'block'; document.getElementById('asnotify').style.display = 'none'; return false;">Show advanced search</a></span>
+	<div class="item" id="advancedsearch" style="display:none;">
 	<form method="get" action="search.php">
-	<input type="text" name="q" tabindex=2 value="${_GET['q']}"/><br/><br/>
-
-	<label>Start Date:</label><br/>
-	<input type="text" name="s" tabindex=3 value=""/><br/>
-	<em>(in D/M/Y format. Leave blank for all dates)</em></br><br/>
-	
-
-	<label>End Date:</label><br/>
-	<input type="text" name="e" tabindex=4 value=""/><br/>
-	<em>(in D/M/Y format. Leave blank for all dates)</em></br><br/>
-
-	<label>Language:</label>
+	<label>Search term(s): </label><input type="text" name="q" tabindex=2 value="${_GET['q']}"/><br/><br/>
+	<label>Language: </label>
 	<select name="l" tabindex=5>
 		<option value="">All</option>
 		<option value="en">English</option>
@@ -183,20 +167,15 @@ echo<<<OUT
 	</select>
 	<br/><br/>
 
-	<input type="radio" name="t" value="1" /> Order by timestamp<br />
+	<input type="radio" name="t" value="1" /> Order by age of post<br />
 	<input type="radio" name="t" value="0" /> Order by popularity<br/><br/>
 
-	<input class="button" type="submit" value="Advanced search" tabindex=6 />
-	<input class="button" type="reset" value="Reset" tabindex=7 />
+	<input class="button" type="submit" style="width:140px;" value="Advanced search" tabindex=6 />
+	<input class="button" type="reset" style="width:140px;" value="Reset" tabindex=7 />
 	</form>
 
-	<br/><br/>
-	<h3>Note:</h3>
-	To search for a particular word (and not a phrase), use underscores to enclose the search string.<br/><br/>
-	E.g. _india_ instead of india.
-
+	<br/>
 	</div>
-	<div class="content">
 	<div>
 	<h2>Search results:</h2>
 	</div>
@@ -214,35 +193,31 @@ function content($resultset, $searchstring)
 	while($array = $resultset->fetch())
 	{
 
-		$link = "go.php?url=".$array[0];
+		$link = $array[0];
 		$title = $array[1];
-		$content = $array[2];
+		$content = strip_tags($array[2]);
 		$timestamp = date('j F Y', $array[3]);
 		$buzz = (int)($array[4] * 100);
 		$blogurl = $array[5];
 
-		if($buzz > 100)
-		{
-			$buzz = 100;
-		}
-
-		if($buzz < 0)
-		{
-			$buzz = 0;
-		}
+		if($buzz <= 1)		{ $style = '<div id="buzz1"class="buzz"><a>1 chili</a></div>'; }
+		else if($buzz <= 15)	{ $style = '<div id="buzz2"class="buzz"><a>2 chilis</a></div>'; }
+		else if($buzz <= 35)	{ $style = '<div id="buzz3"class="buzz"><a>3 chilis</a></div>'; }
+		else if($buzz <= 55)	{ $style = '<div id="buzz4"class="buzz"><a>4 chilis</a></div>'; }
+		else			{ $style = '<div id="buzz5"class="buzz"><a>5 chilis</a></div>'; }
 
 		// highlighing searchstring in results
 
-		$searchstring = str_replace('"', '', $searchstring);
+		$searchstring = str_replace('_', '', $searchstring);
 		$content = str_ireplace($searchstring, '<strong><u>'.$searchstring.'</u></strong>', $content);
 
 echo<<<OUT
-		<div class="item">
-			<h2><a href="$link">$title</a></h2>
-			<p><small><a href="$blogurl">$blogurl</a></small></p>
-			<p>$content</p>
-			<p><small>Posted on $timestamp | Spice: $buzz%</small></p>
-		</div>
+	<div class="item">
+		<h2><a href="go.php?url=$link">$title</a></h2>
+		<p><small><a href="$blogurl">$blogurl</a></small></p>
+		<p>$content</p>
+		<div id=footer><div id=timestamp>Posted $timestamp</div>$style</div>
+	</div>
 
 OUT;
 

@@ -1,22 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 3.3.9
+-- version 2.11.11.1
 -- http://www.phpmyadmin.net
 --
--- Host: localhost
--- Generation Time: Sep 03, 2011 at 05:30 PM
--- Server version: 5.5.8
--- PHP Version: 5.3.5
+-- Host: mysql
+-- Server version: 5.0.77
+-- PHP Version: 5.2.13
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-
 --
--- Database: `kottu`
 --
 
 -- --------------------------------------------------------
@@ -26,15 +18,14 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 --
 
 CREATE TABLE IF NOT EXISTS `blogs` (
-  `bid` int(11) NOT NULL AUTO_INCREMENT,
-  `blogName` varchar(64) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `bid` int(11) NOT NULL auto_increment,
+  `blogName` varchar(64) character set utf8 collate utf8_unicode_ci NOT NULL,
   `blogURL` varchar(64) NOT NULL,
   `blogRSS` varchar(128) NOT NULL,
-  `access_ts` int(11) NOT NULL DEFAULT '1303306000',
-  PRIMARY KEY (`bid`),
-  UNIQUE KEY `blogURL` (`blogURL`),
-  UNIQUE KEY `blogURL_2` (`blogURL`,`blogRSS`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1365 ;
+  `access_ts` int(11) NOT NULL default '1303306000',
+  PRIMARY KEY  (`bid`),
+  UNIQUE KEY `blogURL` (`blogURL`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1396 ;
 
 -- --------------------------------------------------------
 
@@ -46,9 +37,25 @@ CREATE TABLE IF NOT EXISTS `clicks` (
   `url` varchar(64) NOT NULL,
   `ip` varchar(16) NOT NULL,
   `timestamp` int(11) NOT NULL,
-  PRIMARY KEY (`url`,`ip`,`timestamp`)
+  PRIMARY KEY  (`url`,`ip`,`timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `plainkottu`
+--
+CREATE TABLE IF NOT EXISTS `plainkottu` (
+`link` varchar(256)
+,`title` varchar(192)
+,`postContent` varchar(512)
+,`serverTimestamp` int(11)
+,`postBuzz` float
+,`blogURL` varchar(64)
+,`blogName` varchar(64)
+,`tweetCount` int(11)
+,`fbCount` int(11)
+);
 -- --------------------------------------------------------
 
 --
@@ -56,37 +63,32 @@ CREATE TABLE IF NOT EXISTS `clicks` (
 --
 
 CREATE TABLE IF NOT EXISTS `posts` (
-  `postID` int(11) NOT NULL AUTO_INCREMENT,
+  `postID` int(11) NOT NULL auto_increment,
   `blogID` int(11) NOT NULL,
   `link` varchar(256) NOT NULL,
-  `title` varchar(192) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-  `postContent` varchar(512) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-  `language` set('en','si','ta','dv') NOT NULL DEFAULT 'en',
+  `title` varchar(192) character set utf8 collate utf8_unicode_ci NOT NULL,
+  `postContent` varchar(512) character set utf8 collate utf8_unicode_ci NOT NULL,
+  `tags` varchar(32) character set utf8 collate utf8_unicode_ci NOT NULL,
+  `language` set('en','si','ta','dv') NOT NULL default 'en',
   `postTimestamp` int(11) NOT NULL,
   `serverTimestamp` int(11) NOT NULL,
-  `tweetCount` int(11) NOT NULL DEFAULT '0',
-  `fbCount` int(11) NOT NULL DEFAULT '0',
-  `apiCount_t` int(11) NOT NULL DEFAULT '0',
-  `apiCount_f` int(11) NOT NULL DEFAULT '0',
-  `postBuzz` float NOT NULL DEFAULT '0',
-  PRIMARY KEY (`postID`),
+  `tweetCount` int(11) NOT NULL default '0',
+  `fbCount` int(11) NOT NULL default '0',
+  `apiCount_t` int(11) NOT NULL default '0',
+  `apiCount_f` int(11) NOT NULL default '0',
+  `postBuzz` float NOT NULL default '0',
+  PRIMARY KEY  (`postID`),
   UNIQUE KEY `link` (`link`),
-  KEY `blogID` (`blogID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=146151 ;
+  KEY `blogID` (`blogID`),
+  KEY `serverTimestamp` (`serverTimestamp`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=167696 ;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tags`
+-- Structure for view `plainkottu`
 --
-
-CREATE TABLE IF NOT EXISTS `tags` (
-  `url` varchar(64) NOT NULL,
-  `ip` varchar(16) NOT NULL,
-  `timestamp` int(11) NOT NULL,
-  `tag` set('technology','travel','nature','personal','entertainment','business','politics','sports','poetry','photos','other') NOT NULL,
-  PRIMARY KEY (`url`,`ip`,`timestamp`,`tag`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+DROP TABLE IF EXISTS `plainkottu`;
 
 --
 -- Constraints for dumped tables
@@ -96,10 +98,10 @@ CREATE TABLE IF NOT EXISTS `tags` (
 -- Constraints for table `clicks`
 --
 ALTER TABLE `clicks`
-  ADD CONSTRAINT `clicks_ibfk_1` FOREIGN KEY (`url`) REFERENCES `posts` (`link`);
+  ADD CONSTRAINT `clicks_ibfk_1` FOREIGN KEY (`url`) REFERENCES `posts` (`link`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `posts`
 --
 ALTER TABLE `posts`
-  ADD CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`blogID`) REFERENCES `blogs` (`bid`);
+  ADD CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`blogID`) REFERENCES `blogs` (`bid`) ON DELETE CASCADE;

@@ -1,0 +1,11 @@
+php_value memory_limit 96M
+Options +FollowSymlinks
+RewriteEngine on
+RewriteRule ^(sinhala|tamil|english|si|ta|en)$ /index.php?l=$1 [NC]
+RewriteRule ^(today|week|month)$ /index.php?t=$1 [NC]
+RewriteRule ^(sinhala|tamil|english|si|ta|en)/(today|week|month)$ /index.php?l=$1&t=$2 [NC]
+RewriteRule ^(blogroll|about)$ /p/$1.php [NC]
+RewriteRule ^feed/popular /feed?pop=1 [NC]
+Redirect 301 /tags.php http://kottu.org
+Redirect 301 /gallery http://kottu.org/gallery.php
+ErrorDocument 404 /error.php

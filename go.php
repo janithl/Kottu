@@ -24,6 +24,7 @@ require('DBConnection.php');
 
 	Version history:
 	0.1	13/08/11	Janith		Started go.php
+	0.2	27/09/11	Janith		Simplified select query
 
 ******************************************************************************************/
 
@@ -35,17 +36,10 @@ if(isset($_GET['url']))
 	$url = $_GET['url'];
 	$timestamp = time();
 
-	$resultset = $dbh->query("SELECT timestamp FROM clicks WHERE ip = :ip AND url = :url ORDER BY timestamp DESC", array(':ip' => $ip, ':url' => $url));
+	$resultset = $dbh->query("SELECT timestamp FROM clicks WHERE timestamp > (unix_timestamp(now()) - 43200) AND ip = :ip AND url = :url ORDER BY timestamp DESC", array(':ip' => $ip, ':url' => $url)); 
+	// validity of one ip is 12 hours, 43200 seconds)
 
-	if($resultset)
-	{
-		$row = $resultset->fetch();
-		if($row[0] < ($timestamp - (12 * 60 * 60))) // validity of one ip is 12 hours
-		{
-			insert_click($ip, $url, $timestamp, $dbh);	
-		}
-	}
-	else
+	if($resultset && mysql_num_rows($resultset) == 0)
 	{
 		insert_click($ip, $url, $timestamp, $dbh);
 	}

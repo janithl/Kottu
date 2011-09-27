@@ -17,23 +17,29 @@ Version history:
 0.5	22/08/11	Janith		Fixed a major issue in that it reads the same blogs
 					over and over - added this access_ts thing to blogs
 0.6	06/09/11	Janith		Added tags, messed with the lang filter, stopped stripping <img>
+0.7	16/09/11	Janith		Made a small fix for the wordpress.com thumbnail issue
 
 ******************************************************************************************/
 
-// array of valid tags - edit here
-$valid = array('art','technology','travel','nature','news','personal','entertainment','business','politics','sports','poetry','photos','faith','other');
+if(isset($_GET['fancyauthentication']) && sha1($_GET['fancyauthentication']) === 'someauthentication')
+{
+	$DBConnection = new DBConnection();
 
-$DBConnection = new DBConnection();
+	$resultset = $DBConnection->query("SELECT bid, blogRSS FROM blogs ORDER BY access_ts ASC LIMIT 50", array());	// here we get 50 blogs we last accessed according to access time
 
-$resultset = $DBConnection->query("SELECT bid, blogRSS FROM blogs ORDER BY access_ts ASC LIMIT 50", array());
+	if($resultset) { feedgetter($resultset, $DBConnection); }
+}
+else
+{
+	echo "Ummm. Something went wrong";
+}
 
-$debug = '';
-
-if($resultset)
+function feedgetter($resultset, $DBConnection)
 {
 	// for debugging purposes //
 
-	$debug = "[feedget ]\tbegan run at ".date('j F Y h:i:s A', time())."\n"; 
+	echo "<pre>\n[feedget ]\tbegan run at ".date('j F Y h:i:s A', time())."\n";
+
 	$counter_all = 0;
 	$counter_ins = 0;
 
@@ -55,7 +61,9 @@ if($resultset)
 
 			if(strlen($title) < 2) { $title = "Untitled Post"; }			
 
-			$post_cont = strip_tags($item->get_description(), '<img>');	// include img tags in desc, for photoblogs later
+			$post_cont = strip_tags($item->get_content(), '<img>');	// include img tags in desc, for thumbnails
+
+			$post_cont = preg_replace("/(&nbsp;|\s|&nbsp;\s)+/", ' ', $post_cont);	// removing those stupid multiple spaces
 
 			if(strlen($post_cont) > 400)	// summary generator
 			{
@@ -71,16 +79,14 @@ if($resultset)
 			// tags!
 
 			$tags = '';
+			$count = 0;
 
 			foreach ($item->get_categories() as $category)
 			{
-				$t = strtolower($category->get_label());
+				$t = trim(strtolower($category->get_label()));
 
-				if($t !== "" && in_array($t, $valid))
-				{
-					$tags .= $t . ','; echo "<strong>" . $t . "</strong><br/>\n";	
-				}
-				echo $t . "<br/>\n";
+				if($count < 3) { $tags .= "$t,"; }
+				$count++;	
 			}
 
 			// old post oldification
@@ -92,11 +98,11 @@ if($resultset)
 
 			// below : badly implemented language filter
 
-			if(preg_match('/[\x{0D80}-\x{0DFF}]{3,5}/u', $post_cont))
+			if(preg_match('/[\x{0D80}-\x{0DFF}]{3,5}/u', $post_cont.$title))
 			{
 				$lang = 'si';
 			}
-			else if(preg_match('/[\x{0B80}-\x{0BFF}]{3,5}/u', $post_cont))
+			else if(preg_match('/[\x{0B80}-\x{0BFF}]{3,5}/u', $post_cont.$title))
 			{
 				$lang = 'ta';
 			}
@@ -112,7 +118,7 @@ if($resultset)
 
 			if($resset)
 			{
-				$debug .= "[feedget ]\t\tadded post $title ($post_ts)\n";
+				echo "[feedget ]\t\tadded post $title ($post_ts)\n";
 				$counter_ins++;
 			}
 		}
@@ -120,15 +126,11 @@ if($resultset)
 		$ts_s = time();
 		$DBConnection->query("UPDATE blogs SET access_ts = :time WHERE bid = :bid", array(':time'=>$ts_s, ':bid'=>$array[0]));
 
+		$feed->__destruct();
 		unset($feed);
 	}
 
-	$debug .= "[feedget ]\tended run at".date('j F Y h:i:s A', time()).". $counter_all post(s) were hit and $counter_ins post(s) inserted\n\n";
+	echo "[feedget ]\tended run at ".date('j F Y h:i:s A', time()).". $counter_all post(s) were hit and $counter_ins post(s) inserted\n</pre>\n";
 }
-
-$des = "./stats.html";		// reporting
-$file = fopen($des, 'a');
-fwrite($file, $debug);
-fclose($file);
 
 ?>

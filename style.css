@@ -8,26 +8,34 @@ body {
 
 .header {
 	padding: 0;
-	margin: 0 auto;
-	width: 800px;
-	color: #EEE;
-}
-
-.header p {
-	display:inline;
-	margin-top: -40px;
-	margin-left: 40px;
+	margin: 0 0 10px;
+	width: 100%;
+	height: 60px;
 }
 
 #menu {
-	width: 500px;
-	height: 50px;
-	margin-top: -40px;
-	margin-left: 150px;
+	display:block;
+	width: 800px;
+	height: 60px;
+	margin: 0 auto;
+}
+
+#logo {
+	display:block;
+	background: url('images/logo.png') no-repeat;
+	height:58px;
+	width: 120px;
+}
+
+#lan {
+	display:block;
+	float: left;
+	margin-left: 140px;
+	margin-top: -36px;
 }
 
 #menu ul {
-	display:inline;
+	
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -37,34 +45,31 @@ body {
 #menu li {
 	display: block;
 	float: left;
-	padding-left: 10px;
+	padding: 0;
 	font-weight: bold;
 }
 
-#menu img {
-	padding: 20px;
-}
-
-#menu a {
+#menu li a {
+	color: #EEEEEE;
 	text-decoration: none;
-	color: #EEE;
+	padding: 6px 12px;
+	margin: 0 2px;
 }
-
-#menu a:hover {
+#menu li a:hover {
+	background-color: #E09;
 	text-decoration: none;
-	color: #E09;
 }
 
 #selected a {
-	color: #E09;
+	background-color: #E09;
 }
 
 #search {
 	display: inline;
-	width: 250px;
+	width: 240px;
 	height: 70px;
-	margin-top: -78px;
-	margin-left: 565px;
+	margin-top: -70px;
+	margin-left: 570px;
 	float: left;
 }
 
@@ -75,7 +80,7 @@ body {
 }
 
 #search-text {
-	width: 240px;
+	width: 230px;
 	height: 20px;
 	padding: 3px 0 0 5px;
 	background: #EEE url(images/search.png) no-repeat right;
@@ -98,12 +103,14 @@ body {
 	width: 510px;
 	margin:0 auto;
 	padding:0;
+	font: 12.5px Verdana, Helvetica, sans-serif;
 	float: left;
 }
 
 .sidebar {
 	width:250px;
 	margin-left:40px;
+	margin-top: 10px;
 	padding: 0;
 	float:right;
 	font-size: 12.5px;
@@ -132,6 +139,23 @@ body {
 	padding: 0;
 	margin: 0;
 	border-top: 1px solid #ccc;
+}
+
+.tagcloud {
+	text-align: justify;
+}
+
+.tag {
+	line-height: 1.2;
+}
+.tagsize1 {
+	font-size: 120%;
+}
+.tagsize2 {
+	font-size: 160%;
+}
+.tagsize3 {
+	font-size: 200%;
 }
 
 h1 {
@@ -232,41 +256,10 @@ div.item {
 	color: #38A;
 }
 
-form {
-	text-align: right;
-	font-size: 20px;
-}
-
 #notice {
 	font-size: 14px;
 	margin:10px;
 	text-align: center;
-}
-
-input {
-	padding: 3px;
-	width: 300px;
-	position: relative;
-	background-color: #EEE;
-	font-size: 20px;
-	border:none;
-	margin:10px;
-}
-
-input:focus {
-	box-shadow: 0 0 2px 2px #9CF;
-	background-color: #FFF;
-}
-
-button {
-	margin:10px;
-	padding: 5px;
-	font-size: 16px;
-	color: #FFF;
-	background-color: #3C3;
-	border-radius: 4px;
-	border: 0;
-	cursor: pointer;
 }
 
 #footer {

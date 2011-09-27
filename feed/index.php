@@ -15,7 +15,20 @@ header('Content-type: application/rss+xml');
 
 $dbh = new DBConnection();
 
-$resultset = $dbh->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL, b.blogName FROM posts AS p, blogs AS b WHERE b.bid = p.blogID ORDER BY serverTimestamp DESC LIMIT 15", array());
+if(isset($_GET['pop'])
+{
+	$last24 = time() - (24 * 60 * 60); // posts from last 24 hours
+
+	$resultset = $dbh->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL, b.blogName FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND serverTimestamp > :time ORDER BY postBuzz DESC LIMIT 15", array(':time'=>$last24));
+
+	$pagetitle = 'Kottu: Popular Posts';
+}
+else
+{
+	$resultset = $dbh->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL, b.blogName FROM posts AS p, blogs AS b WHERE b.bid = p.blogID ORDER BY serverTimestamp DESC LIMIT 15", array());
+
+	$pagetitle = 'Kottu: Latest Posts';
+}
 
 $date = date('D, d M Y H:i:s O', time());
 
@@ -31,7 +44,7 @@ $output = <<<OUT
 	>
 
 <channel>
-	<title>Kottu</title>
+	<title>$pagetitle</title>
 	<atom:link href="http://kottu.org${_SERVER['REQUEST_URI']}" rel="self" type="application/rss+xml" />
 	<link>http://kottu.org</link>
 	<description>Kottu is a Sri Lankan blog aggregator</description>
