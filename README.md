@@ -15,7 +15,7 @@ Project started on 09/Aug/2011, with the following primary aims:
 First public release was on 03/Sep/2011
 This (markdown) readme file was created on 27/Sep/2011
 
-Some of Indi's blog posts about Kottu can be seen [here](http://indi.ca/category/kottu).
+Some of Indi's blog posts about Kottu can be seen [here](http://indi.ca/category/kottu+tech).
 
 Licence
 -------
