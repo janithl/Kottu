@@ -25,6 +25,8 @@ require('DBConnection.php');
 	Version history:
 	0.1	13/08/11	Janith		Started go.php
 	0.2	27/09/11	Janith		Simplified select query
+	0.3	06/10/11	Janith		Fixed design flaw- now using postIDs instead
+						of URLs to track clicks. Safer and better.
 
 ******************************************************************************************/
 
@@ -34,14 +36,18 @@ if(isset($_GET['url']))
 {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$url = $_GET['url'];
+
+	$postid = isset($_GET['pid']) ? $_GET['pid'] : 0;
+
 	$timestamp = time();
 
-	$resultset = $dbh->query("SELECT timestamp FROM clicks WHERE timestamp > (unix_timestamp(now()) - 43200) AND ip = :ip AND url = :url ORDER BY timestamp DESC", array(':ip' => $ip, ':url' => $url)); 
+	$resultset = $dbh->query("SELECT timestamp FROM clicks WHERE timestamp > (unix_timestamp(now()) - 43200) "
+		. "AND ip = :ip AND pid = :pid ORDER BY timestamp DESC", array(':ip' => $ip, ':pid' => $postid)); 
 	// validity of one ip is 12 hours, 43200 seconds)
 
-	if($resultset && mysql_num_rows($resultset) == 0)
+	if($resultset && $resultset->fetch() == false)
 	{
-		insert_click($ip, $url, $timestamp, $dbh);
+		insert_click($ip, $postid, $timestamp, $dbh);
 	}
 
 	header("location: $url");
@@ -51,10 +57,11 @@ else
 	header("location: http://kottu.org");
 }
 			
-function insert_click($ipadr, $url, $ts, $dbh)
+function insert_click($ipadr, $pid, $ts, $dbh)
 {
 
-	$resultset = $dbh->query("INSERT INTO clicks(ip, url, timestamp) VALUES (:ip, :url, :timestamp)", array(':ip' => $ipadr, ':url' => $url, ':timestamp' => $ts));
+	$resultset = $dbh->query("INSERT INTO clicks(ip, pid, timestamp) VALUES (:ip, :pid, :timestamp)", 
+					array(':ip' => $ipadr, ':pid' => $pid, ':timestamp' => $ts));
 }
 
 ?>

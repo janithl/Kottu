@@ -88,17 +88,17 @@ if(isset($_GET['q']))		// make sure we have a search query
 	{
 		if($time)
 		{
-			$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) AND p.language LIKE :lang AND p.postTimestamp >= :start AND p.postTimestamp <= :end ORDER BY postTimestamp DESC LIMIT 25", array(':string'=>$string, ':lang'=>$lang, ':start'=>$start, ':end'=>$end));
+			$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL, p.postID FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) AND p.language LIKE :lang AND p.postTimestamp >= :start AND p.postTimestamp <= :end ORDER BY postTimestamp DESC LIMIT 25", array(':string'=>$string, ':lang'=>$lang, ':start'=>$start, ':end'=>$end));
 		}
 		else
 		{
 
-			$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) AND p.language LIKE :lang AND p.postTimestamp >= :start AND p.postTimestamp <= :end ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string, ':lang'=>$lang, ':start'=>$start, ':end'=>$end));
+			$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL, p.postID FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) AND p.language LIKE :lang AND p.postTimestamp >= :start AND p.postTimestamp <= :end ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string, ':lang'=>$lang, ':start'=>$start, ':end'=>$end));
 		}
 	}
 	else
 	{
-		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string));
+		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.postTimestamp, p.postBuzz, b.blogURL, p.postID FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND (postContent LIKE :string OR title LIKE :string) ORDER BY postBuzz DESC LIMIT 25", array(':string'=>$string));
 
 	}
 
@@ -199,6 +199,7 @@ function content($resultset, $searchstring)
 		$timestamp = date('j F Y', $array[3]);
 		$buzz = (int)($array[4] * 100);
 		$blogurl = $array[5];
+		$postid = $array[6];
 
 		if($buzz <= 1)		{ $style = '<div id="buzz1"class="buzz"><a>1 chili</a></div>'; }
 		else if($buzz <= 15)	{ $style = '<div id="buzz2"class="buzz"><a>2 chilis</a></div>'; }
@@ -213,7 +214,7 @@ function content($resultset, $searchstring)
 
 echo<<<OUT
 	<div class="item">
-		<h2><a href="go.php?url=$link">$title</a></h2>
+		<h2><a href="go.php?pid=$postid&url=$link">$title</a></h2>
 		<p><small><a href="$blogurl">$blogurl</a></small></p>
 		<p>$content</p>
 		<div id=footer><div id=timestamp>Posted $timestamp</div>$style</div>

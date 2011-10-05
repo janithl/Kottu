@@ -77,7 +77,8 @@ if(isset($_GET['fancyauthentication']) && sha1($_GET['fancyauthentication']) ===
 			$fb = $array[3];
 			$posturl = $array[4];
 
-			$resultset5 = $DBConnection->query("SELECT COUNT(ip) FROM clicks WHERE url= :url GROUP BY url", array(':url'=>$posturl)); // get click count
+			$resultset5 = $DBConnection->query("SELECT COUNT(ip) FROM clicks WHERE pid= :pid GROUP BY pid", array(':pid'=>$postid)); 
+			// get click count
 
 			if($resultset5)
 			{

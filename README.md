@@ -1,18 +1,21 @@
-Kottu, the Sri Lankan Blog Aggregator
-=====================================
+[Kottu](http://kottu.org), the Sri Lankan Blog Aggregator
+=========================================================
 
-Coded by Janith Leanage and Indi Samarajiva
+Coded by [Janith Leanage](http://janithl.blogspot.com) and [Indi Samarajiva](http://indi.ca).
+
 Project started on 09/Aug/2011, with the following primary aims:
 
 1. Rebuild Kottu as a 'social feed reader'
 	* Aggregates feeds
-	* Allows visitors to like/tweet/plus whatever them
-	* Calculates and displays the 'best posts'
+	* Allows visitors to like/tweet/plus them
+	* Calculate and display the most popular posts
 2. Open source the code
-3. Have it spit out content for print magazines (a tech one to start)
+3. Export content for print magazines
 
 First public release was on 03/Sep/2011
-This (markdown) readme file was created on 27/Sep/2011 
+This (markdown) readme file was created on 27/Sep/2011
+
+Some of Indi's blog posts about Kottu can be seen [here](http://indi.ca/category/kottu).
 
 Licence
 -------
@@ -31,6 +34,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
 (see [license.txt](https://github.com/janithl/Kottu/blob/master/license.txt) for full AGPL licence)
+
+**(For those who don't get the legal lingo: Basically what we're saying is
+feel free to copy our code, but please share back any changes or improvements
+that you make, in the spirit of free software)**
 
 File Tree
 ---------
@@ -90,7 +97,8 @@ A potential failure will follow where I try to explain the code:
 
 	The code above shows the correlation between the API count and the hours after you post that we poll. A post with API count 0 needs to be at least an hour old before we poll, a post with API count 1 needs to be 3 hours old before we poll etc. All of this means we make maximum use of limited API calls and polls your post while giving it time to breathe and gain shares.
 
-		query("SELECT postID, link FROM posts WHERE apiCount_t = :api AND serverTimestamp < :time ORDER BY serverTimestamp ASC LIMIT 5", array(':api'=>$api,':time'=>$timestamp));
+		query("SELECT postID, link FROM posts WHERE apiCount_t = :api AND serverTimestamp < :time ORDER BY   
+		serverTimestamp ASC LIMIT 5", array(':api'=>$api,':time'=>$timestamp));
 
 	The `LIMIT 5` ensures that the maximum number of requests that can go out from any one run of TweetGet is 30. Since TweetGet runs four times an hour, this keeps us inside 120 API calls an hour, which I believe puts us in the clear.
 
@@ -138,7 +146,8 @@ A potential failure will follow where I try to explain the code:
 
 7. go.php attempts to avoid gaming the system by recording your IP address every time you click on a link. Your IP address will not register a "click" for that link for the next 12 hours. We check in the database if there are clicks from your IP that happened in the last 12 hours. If there aren't any, we register your click for the post under your IP.
 
-		$resultset = $dbh->query("SELECT timestamp FROM clicks WHERE timestamp > (unix_timestamp() - 43200) AND ip = :ip AND url = :url ORDER BY timestamp DESC", array(':ip' => $ip, ':url' => $url)); 
+		$resultset = $dbh->query("SELECT timestamp FROM clicks WHERE timestamp > (unix_timestamp() - 43200)   
+		AND ip = :ip AND url = :url ORDER BY timestamp DESC", array(':ip' => $ip, ':url' => $url)); 
 		// validity of one ip is 12 hours, 43200 seconds)
 
 		if($resultset && mysql_num_rows($resultset) == 0)
@@ -192,7 +201,7 @@ A potential failure will follow where I try to explain the code:
 			$catext = '';
 		}
 
-	And *then* we add the entire $catext string into the select query. `O_O`
+	And *then* we add the entire $catext string into the select query. **O_O**
 
 	Notice that some tags seem to be hilariously misspelled (my personal favourite is *buddhis*, which is how *I* used to pronounce the word). This is a trick to get more matches, i.e. `%buddhis%` would match both `buddhist` and `buddhism` etc. 
 
