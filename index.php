@@ -172,7 +172,7 @@ OUT;
 
 	if($time === '')
 	{
-		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.serverTimestamp, p.postBuzz, b.blogURL, b.blogName, p.tweetCount, p.fbCount, p.postID FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND language LIKE :lang $catext ORDER BY serverTimestamp DESC LIMIT $ps, 20", array(':lang'=>$lang)); // no choice here but to put a var in :(
+		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.serverTimestamp, p.postBuzz, b.blogURL, b.blogName, p.tweetCount, p.fbCount, p.postID, p.thumbnail FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND language LIKE :lang $catext ORDER BY serverTimestamp DESC LIMIT $ps, 20", array(':lang'=>$lang)); // no choice here but to put a var in :(
 	}
 	else
 	{
@@ -181,7 +181,7 @@ OUT;
 		if($time === 'week') { $day =  time() - (7 * 24 * 60 * 60); }
 		elseif($time === 'month') { $day = time() - (30 * 24 * 60 * 60); }
 
-		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.serverTimestamp, p.postBuzz, b.blogURL, b.blogName, p.tweetCount, p.fbCount, p.postID FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND serverTimestamp > :time AND language LIKE :lang $catext ORDER BY postBuzz DESC LIMIT $ps, 20", array(':lang'=>$lang,':time'=>$day));
+		$resultset = $DBConnection->query("SELECT p.link, p.title, p.postContent, p.serverTimestamp, p.postBuzz, b.blogURL, b.blogName, p.tweetCount, p.fbCount, p.postID, p.thumbnail FROM posts AS p, blogs AS b WHERE b.bid = p.blogID AND serverTimestamp > :time AND language LIKE :lang $catext ORDER BY postBuzz DESC LIMIT $ps, 20", array(':lang'=>$lang,':time'=>$day));
 
 	}
 
@@ -410,19 +410,9 @@ function content($resultset)
 
 		// post thumbnails
 
-		$html = str_get_html($array[2]);
-		$img = '';
-
-		if(is_object($html))
+		if($array[10] != null)
 		{
-
-			foreach($html->find('img') as $element)
-			{
-				if(preg_match('/(\.jpg|\.png)/i', $element))
-				{
-					$content = '<div class="thumb"><img height="80px" src="' . $element->src . '"/></div>' . "<p>$content</p>";
-				}
-			}
+			$content = '<div class="thumb"><img height="80px" src="' . $array[10] . '"/></div>' . "<p>$content</p>";
 		}
 
 echo<<<OUT
