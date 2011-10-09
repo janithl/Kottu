@@ -6,14 +6,16 @@ Coded by [Janith Leanage](http://janithl.blogspot.com) and [Indi Samarajiva](htt
 Project started on 09/Aug/2011, with the following primary aims:
 
 1. Rebuild Kottu as a 'social feed reader'
-	* Aggregates feeds
-	* Allows visitors to like/tweet/plus them
+	* Aggregate feeds
+	* Allow visitors to like/tweet/plus them
 	* Calculate and display the most popular posts
 2. Open source the code
 3. Export content for print magazines
 
-First public release was on 03/Sep/2011
-This (markdown) readme file was created on 27/Sep/2011
+First public release was on 03/Sep/2011, and this (markdown) readme file was created on 27/Sep/2011
+
+*Note:* Some of this readme file might be outdated due to the backend being upgraded. A full
+review of the documentation will be done once coding is finished on Kottu version 8.0
 
 Some of Indi's blog posts about Kottu can be seen [here](http://indi.ca/category/kottu+tech).
 
